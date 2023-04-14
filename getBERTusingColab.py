@@ -6,12 +6,10 @@ Code partially written by Andreas Poyiatzis:
 https://towardsdatascience.com/nlp-extract-contextualized-word-embeddings-from-bert-keras-tf-67ef29f60a7b
 using BERT as written by Google Research: https://github.com/google-research/bert
 '''
-'''
+
 !rm - rf
 bert
-!git
-clone
-https: // github.com / google - research / bert
+git clone https://github.com/google-research/bert
 import sys
 
 sys.path.append('bert/')
@@ -132,7 +130,6 @@ def input_fn_builder(features, seq_length):
         return d
 
     return input_fn
-
 
 def model_fn_builder(bert_config, init_checkpoint, layer_indexes, use_tpu,
                      use_one_hot_embeddings):
@@ -388,4 +385,3 @@ with open('BERT_base.txt', 'w') as f:
                 f.write('%s ' % v)
 
 files.download('BERT_base.txt')
-'''

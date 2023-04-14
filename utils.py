@@ -2,6 +2,8 @@
 # encoding: utf-8
 
 import numpy as np
+import io
+from bertAugmentation import file_maker
 
 def batch_index(length, batch_size, n_iter=100, is_shuffle=True):
     index = list(range(length))
@@ -102,7 +104,7 @@ def change_y_to_onehot(y):
     return np.asarray(onehot, dtype=np.int32)
 
 
-def load_inputs_twitter(input_file, word_id_file, sentence_len, type_='', is_r=True, target_len=10, encoding='utf8'):
+def load_inputs_twitter(input_file, word_id_file, sentence_len, type_='', is_r=True, target_len=10, augment_data = False, augmentation_file_path = None, encoding='utf8'):
     if type(word_id_file) is str:
         word_to_id = load_word_id_mapping(word_id_file)
     else:
@@ -115,70 +117,79 @@ def load_inputs_twitter(input_file, word_id_file, sentence_len, type_='', is_r=T
     tar_len = []
     all_target, all_sent, all_y = [], [], []
     # read in txt file
-    lines = open(input_file).readlines()
-    for i in range(0, len(lines), 3):
-        # targets
-        words = lines[i + 1].lower().split()
-        target = words
+    with open(input_file, 'r', encoding='utf-8') as fd:
+        lines = fd.readlines()
+        non_augmented = int(len(lines) / 3)
+        if augment_data:
+            print('augment data True')
+            aug_lines = io.open(augmentation_file_path, 'r', encoding='utf-8').readlines()
+            lines.extend(aug_lines)
 
-        target_word = []
-        for w in words:
-            if w in word_to_id:
-                target_word.append(word_to_id[w])
-        l = min(len(target_word), target_len)
-        tar_len.append(l)
-        target_words.append(target_word[:l] + [0] * (target_len - l))
+        for i in range(0, len(lines), 3):
+            # targets
+            words = lines[i + 1].lower().split()
+            target = words
 
-        # sentiment
-        y.append(lines[i + 2].strip().split()[0])
+            target_word = []
+            for w in words:
+                if w in word_to_id:
+                    target_word.append(word_to_id[w])
+            l = min(len(target_word), target_len)
+            tar_len.append(l)
+            target_words.append(target_word[:l] + [0] * (target_len - l))
 
-        # left and right context
-        words = lines[i].lower().split()
-        sent = words
-        words_l, words_r = [], []
-        flag = True
-        for word in words:
-            if word == '$t$':
-                flag = False
-                continue
-            if flag:
-                if word in word_to_id:
-                    words_l.append(word_to_id[word])
+            # sentiment
+            y.append(lines[i + 2].strip().split()[0])
+
+            # left and right context
+            words = lines[i].lower().split()
+            sent = words
+            words_l, words_r = [], []
+            flag = True
+            for word in words:
+                if word == '$t$':
+                    flag = False
+                    continue
+                if flag:
+                    if word in word_to_id:
+                        words_l.append(word_to_id[word])
+                else:
+                    if word in word_to_id:
+                        words_r.append(word_to_id[word])
+            if type_ == 'TD' or type_ == 'TC':
+                # words_l.extend(target_word)
+                words_l = words_l[:sentence_len]
+                words_r = words_r[:sentence_len]
+                sen_len.append(len(words_l))
+                x.append(words_l + [0] * (sentence_len - len(words_l)))
+                # tmp = target_word + words_r
+                tmp = words_r
+                if is_r:
+                    tmp.reverse()
+                sen_len_r.append(len(tmp))
+                x_r.append(tmp + [0] * (sentence_len - len(tmp)))
+                all_sent.append(sent)
+                all_target.append(target)
             else:
-                if word in word_to_id:
-                    words_r.append(word_to_id[word])
-        if type_ == 'TD' or type_ == 'TC':
-            # words_l.extend(target_word)
-            words_l = words_l[:sentence_len]
-            words_r = words_r[:sentence_len]
-            sen_len.append(len(words_l))
-            x.append(words_l + [0] * (sentence_len - len(words_l)))
-            # tmp = target_word + words_r
-            tmp = words_r
-            if is_r:
-                tmp.reverse()
-            sen_len_r.append(len(tmp))
-            x_r.append(tmp + [0] * (sentence_len - len(tmp)))
-            all_sent.append(sent)
-            all_target.append(target)
-        else:
-            words = words_l + target_word + words_r
-            words = words[:sentence_len]
-            sen_len.append(len(words))
-            x.append(words + [0] * (sentence_len - len(words)))
+                words = words_l + target_word + words_r
+                words = words[:sentence_len]
+                sen_len.append(len(words))
+                x.append(words + [0] * (sentence_len - len(words)))
     all_y = y;
     y = change_y_to_onehot(y)
     if type_ == 'TD':
         return np.asarray(x), np.asarray(sen_len), np.asarray(x_r), \
                np.asarray(sen_len_r), np.asarray(y)
     elif type_ == 'TC':
-        return np.asarray(x), np.asarray(sen_len), np.asarray(x_r), np.asarray(sen_len_r), \
+        return non_augmented ,np.asarray(x), np.asarray(sen_len), np.asarray(x_r), np.asarray(sen_len_r), \
                np.asarray(y), np.asarray(target_words), np.asarray(tar_len), np.asarray(all_sent), np.asarray(all_target), np.asarray(all_y)
     elif type_ == 'IAN':
         return np.asarray(x), np.asarray(sen_len), np.asarray(target_words), \
                np.asarray(tar_len), np.asarray(y)
     else:
         return np.asarray(x), np.asarray(sen_len), np.asarray(y)
+
+
 
 
 def load_inputs_twitter_(input_file, word_id_file, sentence_len, type_='', is_r=True, target_len=10, encoding='utf8'):
@@ -193,6 +204,9 @@ def load_inputs_twitter_(input_file, word_id_file, sentence_len, type_='', is_r=
     target_words = []
     tar_len = []
     lines = open(input_file).readlines()
+
+
+
     for i in range(0, len(lines), 3):
         words = lines[i + 1].decode(encoding).lower().split()
         # target_word = map(lambda w: word_to_id.get(w, 0), target_word)

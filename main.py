@@ -11,6 +11,7 @@ import lcrModelAlt
 import svmModel
 from OntologyReasoner import OntReasoner
 from loadData import *
+from bertAugmentation import file_maker
 
 #import parameter configuration and data paths
 from config import *
@@ -28,28 +29,31 @@ import lcrModelAlt_hierarchical_v4
 def main(_):
     loadData         = False        # only for non-contextualised word embeddings.
                                     #   Use prepareBERT for BERT (and BERT_Large) and prepareELMo for ELMo
-    useOntology      = True         # When run together with runLCRROTALT, the two-step method is used
+    useOntology      = False         # When run together with runLCRROTALT, the two-step method is used
     runLCRROTALT     = False
-
+    augment_data     = False
     runSVM           = False
     runCABASC        = False
     runLCRROT        = False
     runLCRROTINVERSE = False
     weightanalysis   = False
 
-    runLCRROTALT_v1     = True
+    runLCRROTALT_v1     = False
     runLCRROTALT_v2     = False
     runLCRROTALT_v3     = False
-    runLCRROTALT_v4     = False
+    runLCRROTALT_v4     = True
+
+    #if augment_data:
+    #    file_maker('C:/Users/ryans/PycharmProjects/HAABSA++DA/data/GloVetraindata2016.txt',FLAGS.augmentation_file_path)
 
     #determine if backupmethod is used
-    if runCABASC or runLCRROT or runLCRROTALT or runLCRROTINVERSE or runSVM or runLCRROTALT_v1 or runLCRROTALT_v2 or runLCRROTALT_v3 or runLCRROTALT_v4:
+    if runLCRROTALT_v4:
         backup = True
     else:
         backup = False
-    
+
     # retrieve data and wordembeddings
-    train_size, test_size, train_polarity_vector, test_polarity_vector = loadDataAndEmbeddings(FLAGS, loadData)
+    train_size, test_size, train_polarity_vector, test_polarity_vector = loadDataAndEmbeddings(FLAGS, loadData,augment_data)
     print(test_size)
     remaining_size = 250
     accuracyOnt = 0.87
@@ -60,8 +64,8 @@ def main(_):
         Ontology = OntReasoner()
         accuracyOnt, remaining_size = Ontology.run(backup,FLAGS.test_path_ont, runSVM)
         #out of sample accuracy
-        #Ontology = OntReasoner()      
-        #accuracyInSampleOnt, remainingInSample_size = Ontology.run(backup,FLAGS.train_path_ont, runSVM)        
+        #Ontology = OntReasoner()
+        #accuracyInSampleOnt, remainingInSample_size = Ontology.run(backup,FLAGS.train_path_ont, runSVM)
         if runSVM == True:
             test = FLAGS.remaining_svm_test_path
         else:
@@ -97,7 +101,7 @@ def main(_):
 
     if runLCRROTALT_v4 == True:
        _, pred2, fw2, bw2, tl2, tr2 = lcrModelAlt_hierarchical_v4.main(FLAGS.train_path, test, accuracyOnt, test_size,
-                                                        remaining_size)
+                                                        remaining_size,augment_data,FLAGS.augmentation_file_path)
        tf.reset_default_graph()
 
 '''

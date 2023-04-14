@@ -1,14 +1,17 @@
 import os
 import json
+import pymongo
 import xml.etree.ElementTree as ET
 from collections import Counter
 import string
 import en_core_web_sm
 n_nlp = en_core_web_sm.load()
-#import spacy
+import spacy
 import nltk
 import re
 import numpy as np
+from bertAugmentation import file_maker
+import io
 
 def window(iterable, size): # stack overflow solution for sliding window
     i = iter(iterable)
@@ -70,7 +73,7 @@ Return:
 @max_target_len: maximum target length
 
 """
-def read_data_2016(fname, source_count, source_word2idx, target_count, target_phrase2idx, file_name):
+def read_data_2016(fname, source_count, source_word2idx, target_count, target_phrase2idx, file_name, augment_data, augmentation_file):
     if os.path.isfile(fname) == False:
         raise ("[!] Data %s not found" % fname)
 
@@ -79,12 +82,16 @@ def read_data_2016(fname, source_count, source_word2idx, target_count, target_ph
     root = tree.getroot()
 
     outF= open(file_name, "w")
+    augmF = open(augmentation_file, "w", encoding='utf-8') if augmentation_file else None
 
     # save all words in source_words (includes duplicates)
     # save all aspects in target_words (includes duplicates)
     # finds max sentence length and max targets length
     source_words, target_words, max_sent_len, max_target_len = [], [], 0, 0
     target_phrases = []
+
+    augmenter = augment_data
+    augmented_sentences = []
 
     countConfl = 0
     for sentence in root.iter('sentence'):
@@ -156,7 +163,7 @@ def read_data_2016(fname, source_count, source_word2idx, target_count, target_ph
                         target_label.append(lab)
                         outF.write(str(lab))
                         outF.write("\n")
-
+    file_maker(outF,augmF)
     outF.close()
     print("Read %s aspects from %s" % (len(source_data), fname))
     print(countConfl)

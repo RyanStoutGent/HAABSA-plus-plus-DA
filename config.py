@@ -4,11 +4,12 @@
 import tensorflow as tf
 import sys
 
-
+main_path = "C:/Users/ryans/PycharmProjects/HAABSA++DA/data/externalData/"
 FLAGS = tf.app.flags.FLAGS
 #general variables
 tf.app.flags.DEFINE_string('embedding_type','BERT','can be: glove, word2vec-cbow, word2vec-SG, fasttext, BERT, BERT_Large, ELMo')
 tf.app.flags.DEFINE_integer("year",2016, "year data set [2014]")
+tf.app.flags.DEFINE_string('da_type','BERT','type of data augmentation method (can be: none, EDA-original, BERT, BERT_prepend)') # EDA-adjusted is also implemented, but not considered in this research
 tf.app.flags.DEFINE_integer('embedding_dim', 768, 'dimension of word embedding')
 tf.app.flags.DEFINE_integer('batch_size', 20, 'number of example per batch')
 tf.app.flags.DEFINE_integer('n_hidden', 300, 'number of hidden unit')
@@ -19,7 +20,7 @@ tf.app.flags.DEFINE_integer('max_doc_len', 20, 'max number of tokens per sentenc
 tf.app.flags.DEFINE_float('l2_reg', 0.00001, 'l2 regularization')
 tf.app.flags.DEFINE_float('random_base', 0.01, 'initial random base')
 tf.app.flags.DEFINE_integer('display_step', 4, 'number of test display step')
-tf.app.flags.DEFINE_integer('n_iter', 200, 'number of train iter')
+tf.app.flags.DEFINE_integer('n_iter', 10, 'number of train iter')
 tf.app.flags.DEFINE_float('keep_prob1', 0.5, 'dropout keep prob')
 tf.app.flags.DEFINE_float('keep_prob2', 0.5, 'dropout keep prob')
 tf.app.flags.DEFINE_string('t1', 'last', 'type of hidden output')
@@ -31,7 +32,7 @@ tf.app.flags.DEFINE_integer('max_target_len', 19, 'max target length')
 # traindata, testdata and embeddings, train path aangepast met ELMo
 tf.app.flags.DEFINE_string("train_path_ont", "data/programGeneratedData/GloVetraindata"+str(FLAGS.year)+".txt", "train data path for ont")
 tf.app.flags.DEFINE_string("test_path_ont", "data/programGeneratedData/GloVetestdata"+str(FLAGS.year)+".txt", "formatted test data path")
-tf.app.flags.DEFINE_string("train_path", "data/programGeneratedData/" + str(FLAGS.embedding_type) +str(FLAGS.embedding_dim)+'traindata'+str(FLAGS.year)+".txt", "train data path")
+tf.app.flags.DEFINE_string("train_path", "data/programGeneratedData/" + 'BERTpreDA_augmented_data' +str(FLAGS.year)+".txt", "train data path")
 tf.app.flags.DEFINE_string("test_path", "data/programGeneratedData/" + str(FLAGS.embedding_type) + str(FLAGS.embedding_dim)+'testdata'+str(FLAGS.year)+".txt", "formatted test data path")
 tf.app.flags.DEFINE_string("embedding_path", "data/programGeneratedData/" + str(FLAGS.embedding_type) + str(FLAGS.embedding_dim)+'embedding'+str(FLAGS.year)+".txt", "pre-trained glove vectors file path")
 tf.app.flags.DEFINE_string("remaining_test_path_ELMo", "data/programGeneratedData/"+str(FLAGS.embedding_dim)+'remainingtestdata'+str(FLAGS.year)+"ELMo.txt", "only for printing")
@@ -50,7 +51,8 @@ tf.app.flags.DEFINE_string("hyper_svm_train_path", "data/programGeneratedData/"+
 tf.app.flags.DEFINE_string("hyper_svm_eval_path", "data/programGeneratedData/"+str(FLAGS.embedding_dim)+'hyperevalsvmdata'+str(FLAGS.year)+".txt", "hyper eval svm data path")
 
 #external data sources
-tf.app.flags.DEFINE_string("pretrain_file", "data/externalData/"+str(FLAGS.embedding_type)+"."+str(FLAGS.embedding_dim)+"d.txt", "pre-trained embedding vectors for non BERT and ELMo")
+tf.app.flags.DEFINE_string("pretrain_file", "data/externalData/"+str(FLAGS.embedding_type)+str(FLAGS.embedding_dim)+"embedding"+str(FLAGS.year)+".txt", "pre-trained embedding vectors for non BERT and ELMo")
+#tf.app.flags.DEFINE_string("pretrain_file", main_path+"glove.42B."+str(FLAGS.embedding_dim)+"d.txt", "pre-trained embedding vectors for non BERT and ELMo")
 
 tf.app.flags.DEFINE_string("train_data", "data/externalData/restaurant_train_"+str(FLAGS.year)+".xml",
                     "train data path")
@@ -60,6 +62,18 @@ tf.app.flags.DEFINE_string("test_data", "data/externalData/restaurant_test_"+str
 tf.app.flags.DEFINE_string('method', 'AE', 'model type: AE, AT or AEAT')
 tf.app.flags.DEFINE_string('prob_file', 'prob1.txt', 'prob')
 tf.app.flags.DEFINE_string('saver_file', 'prob1.txt', 'prob')
+
+######################## Prepare BERT embedding flags
+tf.app.flags.DEFINE_string('temp_dir', 'data/programGeneratedData/temporaryData/', 'directory for temporary files')
+tf.app.flags.DEFINE_string('temp_bert_dir', FLAGS.temp_dir+'/BERT/', 'directory for temporary BERT files')
+tf.app.flags.DEFINE_string('bert_embedding_path',  "data/programGeneratedData/" + str(FLAGS.embedding_type) + str(FLAGS.embedding_dim)+'embedding'+str(FLAGS.year)+".txt", 'path to BERT embeddings file')
+tf.app.flags.DEFINE_string('raw_data_dir', 'data/programGeneratedData/raw_data/', 'folder contataining raw data')
+tf.app.flags.DEFINE_string('raw_data_file', FLAGS.raw_data_dir + FLAGS.da_type + '_' +'raw_data'+str(FLAGS.year)+'.txt', 'raw data file for retrieving BERT embeddings, contains both train and test data')
+tf.app.flags.DEFINE_string('raw_data_train', FLAGS.raw_data_dir + FLAGS.da_type + '_' + 'raw_data'+str(FLAGS.year)+'_train.txt', 'file raw train data is written to')
+tf.app.flags.DEFINE_string('raw_data_test', FLAGS.raw_data_dir + FLAGS.da_type  + '_' + 'raw_data'+str(FLAGS.year)+'_test.txt', 'file raw test data is written to')
+tf.app.flags.DEFINE_string('raw_data_augmented', FLAGS.raw_data_dir + FLAGS.da_type + '_' + 'raw_data'+str(FLAGS.year)+'_augm.txt', 'file raw augmented data is written to')
+tf.app.flags.DEFINE_string('augmentation_file_path', 'data/programGeneratedData/'+'BERTDA_augmented_data' + str(FLAGS.year)+'.txt', 'augmented train file')
+
 
 
 def print_config():
@@ -111,3 +125,5 @@ def saver_func(_dir):
     if not os.path.exists(_dir):
         os.makedirs(_dir)
     return saver
+
+

@@ -3,6 +3,7 @@
 
 
 from owlready2 import *
+import owlready2
 import numpy as np
 import nltk
 import time
@@ -12,10 +13,10 @@ from nltk import *
 from config import *
 
 #path to the java runtime environment
-nltk.internals.config_java('C:/Program Files/Java/jre1.8.0_171/bin/java.exe')
-java_path = 'C:/Program Files/Java/jre1.8.0_171/bin/java.exe'
+nltk.internals.config_java('C:/Program Files/Java/jre1.8.0_261/bin/java.exe')
+java_path = 'C:/Program Files/Java/jre1.8.0_261/bin/java.exe'
 os.environ['JAVAHOME'] = java_path
-owlready2.JAVA_EXE = 'C:/Program Files/Java/jre1.8.0_171/bin/java.exe'
+owlready2.JAVA_EXE = 'C:/Program Files/Java/jre1.8.0_261/bin/java.exe'
 
 class OntReasoner():
     def __init__(self):
@@ -97,7 +98,7 @@ class OntReasoner():
             self.remaining_sentence_vector.append(sentence)
             self.remaining_target_vector.append(target)
             self.remaining_pos_vector.extend((posinfo, posinfo+1, posinfo+2))
-            print(posinfo, sentence)
+            #print(posinfo, sentence)
         # Create remaining vector for BoW model
         elif use_svm:
             self.sencount += -1
@@ -105,7 +106,7 @@ class OntReasoner():
             self.remaining_sentence_vector.append(sentence)
             self.remaining_target_vector.append(target)
             self.remaining_pos_vector.extend((int(posinfo/3*4), int((posinfo/3*4)+1), int((posinfo/3*4)+2), int((posinfo/3*4)+3)))
-            print(posinfo, sentence)
+            #print(posinfo, sentence)
         else:
             self.prediction_vector.append(self.get_majority_class(self.polarity_vector))
             self.majority_count.append(1)
@@ -167,8 +168,8 @@ class OntReasoner():
                     negated = True
         negations = ["not", "n,t", "never"]
         if negated == False and any(x in s for x in negations for s in words_in_sentence):
-            print('negation parser')
-            print(' '.join(words_in_sentence))
+            #print('negation parser')
+            #print(' '.join(words_in_sentence))
             result = dependency_parser.raw_parse(' '.join(words_in_sentence))
             dep = result.__next__()
             result = list(dep.triples())
@@ -353,7 +354,7 @@ class OntReasoner():
 
         # Save the outputs to .txt file
         if use_backup == True:
-            print(self.remaining_pos_vector)
+            #print(self.remaining_pos_vector)
             outF= open(FLAGS.remaining_test_path, "w")
             with open(FLAGS.test_path, "r") as fd:
                 for i, line in enumerate(fd):
@@ -361,7 +362,7 @@ class OntReasoner():
                         outF.write(line)
             outF.close()
         if use_svm == True:
-            print(self.remaining_pos_vector)
+            #print(self.remaining_pos_vector)
             outF= open(FLAGS.remaining_svm_test_path, "w")
             with open(FLAGS.test_svm_path, "r") as fd:
                 for i, line in enumerate(fd):
@@ -370,7 +371,7 @@ class OntReasoner():
 
         if cross_val:
             if use_backup == True:
-                print(self.remaining_pos_vector)
+                #print(self.remaining_pos_vector)
                 outF= open("data/programGeneratedData/crossValidation"+str(FLAGS.year)+'/cross_val_remainder_'+str(j)+'.txt', "w")
                 with open(FLAGS.test_path, "r") as fd:
                     for i, line in enumerate(fd):
@@ -378,7 +379,7 @@ class OntReasoner():
                             outF.write(line)
                 outF.close()
             if use_svm == True:
-                print(self.remaining_pos_vector)
+                #print(self.remaining_pos_vector)
                 outF= open("data/programGeneratedData/crossValidation"+str(FLAGS.year)+'/svm/cross_val_remainder_'+str(j)+'.txt', "w")
                 with open(FLAGS.test_svm_path, "r") as fd:
                     for i, line in enumerate(fd):
