@@ -8,7 +8,6 @@ import random as rd
 BERT_MODEL = 'bert-base-uncased'
 tokenizer = BertTokenizer.from_pretrained(BERT_MODEL)
 unmasker = pipeline(task='fill-mask', model='bert-base-uncased',topk = 2)
-rd.seed(546297)
 
 model = BertForMaskedLM.from_pretrained(BERT_MODEL)
 
@@ -87,7 +86,7 @@ def augment_sentence_conditional(in_sentence, in_target, in_sentiment):
             prob1 = rd.random()
             if prob1 <= real_percentage:
                 prob2 = rd.random()
-                if prob2 <= 0.8:
+                if prob2 <= 1:
                     amount_masked += 1
                     cur_sent = masked_sen.copy()
                     masked_word = words[i]
@@ -129,5 +128,6 @@ def augment_sentence_conditional(in_sentence, in_target, in_sentiment):
                 i+=1
 
     augmentend_sentence_str = ' '.join(augmentend_sentence)
+    print(augmentend_sentence_str)
     return augmentend_sentence_str
 
