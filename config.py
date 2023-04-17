@@ -74,6 +74,22 @@ tf.app.flags.DEFINE_string('raw_data_test', FLAGS.raw_data_dir + FLAGS.da_type  
 tf.app.flags.DEFINE_string('raw_data_augmented', FLAGS.raw_data_dir + FLAGS.da_type + '_' + 'raw_data'+str(FLAGS.year)+'_augm.txt', 'file raw augmented data is written to')
 tf.app.flags.DEFINE_string('augmentation_file_path', 'data/programGeneratedData/'+'BERTDA_augmented_data' + str(FLAGS.year)+'.txt', 'augmented train file')
 
+# EDA variables from T. Liesting
+tf.app.flags.DEFINE_string("EDA_type", "adjusted", "type of eda (original or adjusted)")
+tf.app.flags.DEFINE_integer("EDA_deletion", 0, "number of deletion augmentations")
+tf.app.flags.DEFINE_integer("EDA_replacement", 1, "number of replacement augmentations")
+tf.app.flags.DEFINE_integer("EDA_insertion", 1, "number of insertion augmentations")
+tf.app.flags.DEFINE_integer("EDA_swap", 1, "number of swap augmentations") # in adjusted mode, higher number means more swaps within the same category
+tf.app.flags.DEFINE_float("EDA_pct", .2, "percentage of words affected by augmentation") # in adjusted mode EDA_swap not affected
+# Note that each augmentation is a seperate sentence (so replacement = 1 means twice as much training data, so dont make the sum >10)
+tf.app.flags.DEFINE_string("backtranslation_langs", "None", "languages to translate to, seperated by space, each space is an augmentation, write None if not using")
+tf.app.flags.DEFINE_integer("use_word_mixup", 0, "boolean whether to use word mixup or not")
+tf.app.flags.DEFINE_integer("use_sentence_mixup", 0, "boolean whether to use sentence mixup or not")
+tf.app.flags.DEFINE_float("mixup_beta", 0.2, 'the alpha and beta values deciding the interpolation in mixup')
+tf.app.flags.DEFINE_integer("mixup_on_augmentations", 0, "If mixup should be applied on augmentations or only on original data")
+tf.app.flags.DEFINE_integer("original_multiplier", 3, "How many times the original data should be used in the training data")
+tf.app.flags.DEFINE_string('augmentation_file_path', "data/programGeneratedData/"+str(FLAGS.embedding_type)+'_augmented_data'+str(FLAGS.year)+".txt", "The file where augmented data is written to")
+tf.app.flags.DEFINE_string('backtranslation_file', "data/programGeneratedData/translations.json", 'where backtranslation files are saved')
 
 
 def print_config():
