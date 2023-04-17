@@ -1,4 +1,4 @@
-In our research we performed Data Augmentation on the HAABSA++ model of M. Trusca. After forking her work as a basis (https://github.com/mtrusca/HAABSA_PLUS_PLUS), we used the EDA from T. Liesting (https://github.com/tomasLiesting/HAABSADA) and added our own BERT based augmentation methods. In order to perform the research yourself, you can follow the instructions as given by M. Trusca and run the augmentation on the data files.
+In our research we performed Data Augmentation on the HAABSA++ model of M. Trusca. After forking her work as a basis (https://github.com/mtrusca/HAABSA_PLUS_PLUS), we used the EDA from T. Liesting (https://github.com/tomasLiesting/HAABSADA) and added our own BERT based augmentation methods. In order to perform the research yourself, you can follow the instructions as given by M. Trusca and run the augmentation on the data files. For our research, we use the fourth method of the LCR-ROT model and within this LCR-ROT model the BERT embeddings are being used.
 
 # HAABSA++
 The code for A Hybrid Approach for Aspect-Based Sentiment Analysis Using Contextual Word Emmbeddings and Hierarchical Attention
